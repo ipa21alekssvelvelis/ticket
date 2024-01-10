@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const PasswordToggle = ({ value, onChange }) => {
+const PasswordToggle = ({ value, id, onChange }) => {
   const [isPasswordRevealed, setIsPasswordRevealed] = useState(false);
 
   const handlePasswordReveal = () => {
@@ -13,7 +13,9 @@ const PasswordToggle = ({ value, onChange }) => {
         type={isPasswordRevealed ? 'text' : 'password'}
         value={value}
         onChange={onChange}
-        className='indent-2 text-lg rounded-sm border-b-2 w-full'
+        id={id}
+        name={id}
+        className='focus:outline-none focus:border-2 duration-150 border border-neutral-600 indent-2 h-10 text-lg rounded-sm w-full'
       />
       <div className={`absolute top-0 inset-y-0 right-0 flex items-center pr-3 cursor-pointer`} onClick={handlePasswordReveal}>
         {!isPasswordRevealed ? (
