@@ -3,6 +3,7 @@ import PasswordToggle from './PasswordToggle';
 function AccessForms() {
     const [errors, setErrors] = useState({});
     const [isLoginForm, setIsLoginForm] = useState(true);
+    const [success, setSuccess] = useState('');
 
     const toggleForm = () => {
         setIsLoginForm(!isLoginForm);
@@ -11,57 +12,95 @@ function AccessForms() {
     const handleSubmitForm = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(e.target);
+    const formData = {
+        loginEmail: e.target.loginEmail ? e.target.loginEmail.value.trim() : '',
+        loginPassword: e.target.loginPassword ? e.target.loginPassword.value.trim() : '',
+        registerEmail: e.target.registerEmail ? e.target.registerEmail.value.trim() : '',
+        registerPassword: e.target.registerPassword ? e.target.registerPassword.value.trim() : '',
+        confirmRegisterPassword: e.target.confirmRegisterPassword ? e.target.confirmRegisterPassword.value.trim() : '',
+    };
 
     if (isLoginForm) {
-      const validationErrors = {};
-      console.log('Login form');
+        const validationErrors = {};
+        console.log('Login form');
 
-      const emailToClear = formData.get('loginEmail').trim();
-      const passwordToClear = formData.get('loginPassword').trim();
+        const emailToClear = formData.loginEmail;
+        const passwordToClear = formData.loginPassword;
 
-      if (!emailToClear) {
-        validationErrors.loginEmail = 'E-mail is required';
-      }
-      if (!passwordToClear) {
-        validationErrors.loginPassword = 'Password is required';
-      }
+        if (!emailToClear) {
+            validationErrors.loginEmail = 'E-mail is required';
+        }
+        if (!passwordToClear) {
+            validationErrors.loginPassword = 'Password is required';
+        }
 
-      setErrors(validationErrors);
+        setErrors(validationErrors);
+
+        if (Object.keys(validationErrors).length === 0) {
+            setErrors({});
+            console.log(formData);
+            try{
+                const response = await fetch('http://localhost/api/login', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                });
+                if(response){
+                    console.log('Response:', response);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
 
     } else {
-      const validationErrors = {};
-      console.log('Register form');
+        const validationErrors = {};
+        console.log('Register form');
 
-      const emailToClear = formData.get('registerEmail').trim();
-      const passwordToClear = formData.get('registerPassword').trim();
-      const regPasswordToClear = formData.get('confirmRegisterPassword').trim();
+        const emailToClear = formData.registerEmail;
+        const passwordToClear = formData.registerPassword;
+        const regPasswordToClear = formData.confirmRegisterPassword;
 
-      if (!emailToClear) {
-        validationErrors.registerEmail = 'E-mail is required';
-      }else{
-        validationErrors.registerEmail = '';
-      }
+        if (!emailToClear) {
+            validationErrors.registerEmail = 'E-mail is required';
+        }   
 
-      if (!passwordToClear) {
-        validationErrors.registerPassword = 'Password is required';
-      }else{
-        validationErrors.registerPassword = '';
-      }
+        if (!passwordToClear) {
+            validationErrors.registerPassword = 'Password is required';
+        }
 
-      if (!regPasswordToClear) {
-        validationErrors.confirmRegisterPassword = 'Confirmation is required';
-      }else{
-        validationErrors.confirmRegisterPassword = '';
-      }
-
-      if(regPasswordToClear !== passwordToClear){
-        validationErrors.confirmRegisterPassword = 'Passwords do not match';
-      }else{
-        validationErrors.confirmRegisterPassword = '';
-      }
-
-      setErrors(validationErrors);
+        if (!regPasswordToClear) {
+            validationErrors.confirmRegisterPassword = 'Confirmation is required';
+        } else if (regPasswordToClear !== passwordToClear) {
+            validationErrors.confirmRegisterPassword = 'Passwords do not match';
+        }
+        
+        setErrors(validationErrors);
+        
+        if (Object.keys(validationErrors).length === 0) {
+            setErrors({});
+            console.log(formData);
+            try{
+                const response = await fetch('http://localhost/api/register', {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                });
+                const responseData = await response.json();
+                if (!response.ok) {
+                    setErrors(responseData.errors);
+                    setSuccess('');
+                }else{
+                    setSuccess(responseData.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
     }
   };
 
@@ -116,7 +155,7 @@ function AccessForms() {
                             {errors.confirmRegisterPassword && <p className="text-red-500 ml-3 my-2 text-lg">{errors.confirmRegisterPassword}</p>}
                         </div>
                         <input className='mt-4 w-[75%] h-10 bg-[#ee4de1] text-white text-2xl rounded-sm duration-500 hover:w-[80%] hover:h-[14%] cursor-pointer' type='submit' value='Register' />
-                        <p className='text-red-500 text-lg'>errormessage</p>
+                        {success && <p className='text-green-500 ml-3 my-2 text-lg'>{success}</p>}
                     </form>
                     <h1 className='justify-center flex text-xl cursor-pointer'>Or continue with</h1>
                 </div>
