@@ -7,14 +7,15 @@ function AccessForms() {
 
     const toggleForm = () => {
         setIsLoginForm(!isLoginForm);
+        setSuccess('');
     };
 
     const handleSubmitForm = async (e) => {
     e.preventDefault();
 
     const formData = {
-        loginEmail: e.target.loginEmail ? e.target.loginEmail.value.trim() : '',
-        loginPassword: e.target.loginPassword ? e.target.loginPassword.value.trim() : '',
+        email: e.target.email ? e.target.email.value.trim() : '',
+        password: e.target.password ? e.target.password.value.trim() : '',
         registerEmail: e.target.registerEmail ? e.target.registerEmail.value.trim() : '',
         registerPassword: e.target.registerPassword ? e.target.registerPassword.value.trim() : '',
         confirmRegisterPassword: e.target.confirmRegisterPassword ? e.target.confirmRegisterPassword.value.trim() : '',
@@ -24,8 +25,8 @@ function AccessForms() {
         const validationErrors = {};
         console.log('Login form');
 
-        const emailToClear = formData.loginEmail;
-        const passwordToClear = formData.loginPassword;
+        const emailToClear = formData.email;
+        const passwordToClear = formData.password;
 
         if (!emailToClear) {
             validationErrors.loginEmail = 'E-mail is required';
@@ -47,8 +48,17 @@ function AccessForms() {
                     },
                     body: JSON.stringify(formData),
                 });
-                if(response){
-                    console.log('Response:', response);
+                const responseData = await response.json();
+                if (!response.ok) {
+                    console.error('Error:', responseData.error);
+                    if (responseData.error === 'Invalid account') {
+                        setErrors({ loginEmail: 'Unrecognized email' });
+                    } else if (responseData.error === 'Incorrect password') {
+                        setErrors({ loginPassword: 'Incorrect password' });
+                    }
+                } else {
+                    console.log('Token:', responseData.token);
+                    setSuccess('Sucessful login');
                 }
             } catch (error) {
                 console.error('Error:', error);
@@ -69,12 +79,16 @@ function AccessForms() {
 
         if (!passwordToClear) {
             validationErrors.registerPassword = 'Password is required';
+        } else if (passwordToClear.trim().length < 8){
+            validationErrors.registerPassword = 'Minimum length is 8 symbols';
         }
 
         if (!regPasswordToClear) {
             validationErrors.confirmRegisterPassword = 'Confirmation is required';
         } else if (regPasswordToClear !== passwordToClear) {
             validationErrors.confirmRegisterPassword = 'Passwords do not match';
+        } else if(regPasswordToClear.trim().length < 8){
+            validationErrors.confirmRegisterPassword = 'Minimum length is 8 symbols';
         }
         
         setErrors(validationErrors);
@@ -116,19 +130,20 @@ function AccessForms() {
                     <form className='w-full h-full flex flex-col justify-center items-center' onSubmit={(handleSubmitForm)}>
                         <div className='w-[90%]'>
                             <label className='ml-3 text-lg' htmlFor='loginEmail'>E-mail</label>
-                            <input className='focus:outline-none my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 w-full h-10 rounded-sm' type='email' id='loginEmail' name='loginEmail'/>
+                            <input className='focus:outline-none my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 w-full h-10 rounded-sm' type='email' id='email' name='email'/>
                             {errors.loginEmail && <p className="text-red-500 ml-3 my-2 text-lg">{errors.loginEmail}</p>}
                         </div>
                         <div className='w-[90%]'>
                         <label className='ml-3 text-lg' htmlFor='loginPassword'>Password</label>
-                            <PasswordToggle id='loginPassword'/>
+                            <PasswordToggle id='password'/>
                             {errors.loginPassword && <p className="text-red-500 ml-3 my-2 text-lg">{errors.loginPassword}</p>}
                         </div>
                         <input className='mt-4 w-[75%] my-2 h-10 bg-[#851cea] text-white text-2xl rounded-sm duration-500 hover:w-[80%] hover:h-[14%] cursor-pointer' type='submit' value='Login' />
-                        <p className='text-red-500 text-lg'>errormessage</p>    
+                        {success && <p className='text-green-500 ml-3 my-2 text-lg'>{success}</p>}
                     </form>
                     <h1 className='justify-center flex text-xl cursor-pointer'>Forgot your password?</h1>
                 </div>
+                <p className='absolute top-0 right-2 mr-4 text-2xl hover:bg-[#DED8E5] duration-500 transition-bg cursor-pointer p-1 rounded-md' onClick={toggleForm}>{isLoginForm ? 'Register' : 'Login'}</p>
             </div>
 
             <div className={`border-[3px] border-neutral-700 h-[500px] xl:w-[500px] lg:w-[500px] md:w-[500px] sm:w-[500px] w-[315px] font-light p-4 bg-white rounded-md shadow-lg mb-4 space-x-4 transition-transform absolute transform ${isLoginForm ? '-translate-y-[200%]' : 'translate-y-[0%]'}`}>
@@ -159,8 +174,8 @@ function AccessForms() {
                     </form>
                     <h1 className='justify-center flex text-xl cursor-pointer'>Or continue with</h1>
                 </div>
+                <p className='absolute top-0 right-2 mr-4 text-2xl hover:bg-[#DED8E5] duration-500 transition-bg cursor-pointer p-1 rounded-md' onClick={toggleForm}>{isLoginForm ? 'Register' : 'Login'}</p>
             </div>
-        <p className='absolute top-2 right-2 mr-4 text-2xl hover:bg-[#DED8E5] duration-500 transition-bg cursor-pointer p-1 rounded-md' onClick={toggleForm}>{isLoginForm ? 'Register' : 'Login'}</p>
         </div>
         
     );
