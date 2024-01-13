@@ -15,7 +15,7 @@ const PasswordToggle = ({ value, id, onChange }) => {
         onChange={onChange}
         id={id}
         name={id}
-        className='focus:outline-none focus:border-2 duration-150 border border-neutral-600 indent-2 h-10 text-lg rounded-sm w-full mb-2'
+        className='bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:outline-none focus:border-2 duration-150 border border-neutral-600 indent-2 h-10 text-lg rounded-sm w-full mb-2'
       />
       <div className={`absolute -top-2 inset-y-0 right-0 flex items-center pr-3 cursor-pointer`} onClick={handlePasswordReveal}>
         {!isPasswordRevealed ? (
