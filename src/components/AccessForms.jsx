@@ -39,7 +39,7 @@ function AccessForms() {
 
     if (isLoginForm) {
         const validationErrors = {};
-        console.log('Login form');
+        // console.log('Login form');
 
         const emailToClear = formData.email;
         const passwordToClear = formData.password;
@@ -55,7 +55,7 @@ function AccessForms() {
 
         if (Object.keys(validationErrors).length === 0) {
             setErrors({});
-            console.log(formData);
+            // console.log(formData);
             try{
                 const response = await fetch('http://localhost/api/login', {
                     method: 'POST',
@@ -85,7 +85,7 @@ function AccessForms() {
 
     } else {
         const validationErrors = {};
-        console.log('Register form');
+        // console.log('Register form');
 
         const emailToClear = formData.registerEmail;
         const passwordToClear = formData.registerPassword;
@@ -113,7 +113,7 @@ function AccessForms() {
         
         if (Object.keys(validationErrors).length === 0) {
             setErrors({});
-            console.log(formData);
+            // console.log(formData);
             try{
                 const response = await fetch('http://localhost/api/register', {
                     method: 'POST',
@@ -138,8 +138,8 @@ function AccessForms() {
 
     return(
         <div className="h-screen flex items-center justify-center w-full text-white" style={background}>
-            <div className='flex w-full h-screen content-center justify-center items-center overflow-hidden'>
-                <div className={`border-[3px] border-neutral-100 bg-[rgb(18,18,18,0.90)] ml-6 sm:ml-0 md:ml-0 lg:ml-0 lg:ml-0 h-[400px] xl:w-[500px] lg:w-[500px] md:w-[500px] sm:w-[500px] w-[300px] font-light p-4  mr-5 bg-white rounded-md shadow-lg mb-4 transition-transform absolute transform ${isLoginForm ? 'translate-y-[0%]' : '-translate-y-[200%]'}`}>
+            <div className='flex w-full h-screen content-center justify-center items-center overflow-hidden '>
+                <div className={`border-[3px] border-neutral-100 bg-[rgb(18,18,18,0.90)] ml-6 sm:ml-0 md:ml-0 lg:ml-0 lg:ml-0 h-[400px] xl:w-[500px] lg:w-[500px] md:w-[500px] sm:w-[500px] w-[300px] font-light p-4  mr-5 rounded-md shadow-lg mb-4 transition-transform absolute transform ${isLoginForm ? 'translate-y-[0%]' : '-translate-y-[200%]'}`}>
                     <div className='relative w-full h-full flex flex-col'>
                         <div className='rounded-full w-20 h-20 absolute -top-4 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="black" className="w-16 h-16 absolute top-10 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50 rounded-full">
@@ -164,7 +164,7 @@ function AccessForms() {
                     </div>
                     <p className='absolute top-2 right-0 mr-1 text-2xl hover:bg-white hover:text-black duration-500 transition-bg cursor-pointer p-1 rounded-sm uppercase tracking-wide' onClick={toggleForm}>{isLoginForm ? 'Register' : 'Login'}</p>
                 </div>
-                <div className={`border-[3px] border-neutral-100 bg-[rgb(18,18,18,0.90)] ml-6 sm:ml-0 md:ml-0 lg:ml-0 lg:ml-0 h-[500px] xl:w-[500px] lg:w-[500px] md:w-[500px] sm:w-[500px] w-[300px] font-light mr-5 p-4 bg-white rounded-md shadow-lg mb-4 space-x-4 transition-transform absolute transform ${isLoginForm ? '-translate-y-[200%]' : 'translate-y-[0%]'}`}>
+                <div className={`border-[3px] border-neutral-100 bg-[rgb(18,18,18,0.90)] ml-6 sm:ml-0 md:ml-0 lg:ml-0 lg:ml-0 h-[500px] xl:w-[500px] lg:w-[500px] md:w-[500px] sm:w-[500px] w-[300px] font-light mr-5 p-4 rounded-md shadow-lg mb-4 space-x-4 transition-transform absolute transform ${isLoginForm ? '-translate-y-[200%]' : 'translate-y-[0%]'}`}>
                     <div className='relative w-full h-full flex flex-col'>
                         <div className='rounded-full w-20 h-20 absolute -top-4 left-1/2 transform -translate-x-1/2 -translate-y-1/2'>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="black" className="w-16 h-16 absolute top-10 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-50 rounded-full">
