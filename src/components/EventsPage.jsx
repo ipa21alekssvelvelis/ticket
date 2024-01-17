@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import SingleEvent from './SingleEvent';
 function EventsPage(){
 
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [isSingleEventOpen, setSingleEventOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [events, setEvents] = useState([]);
     const [noMatch, setNoMatch] = useState(false);
@@ -16,19 +18,26 @@ function EventsPage(){
         const query = e.target.value.toLowerCase();
         setSearch(query);
     
-        const filtered = events.filter(
-            (event) =>
-                event.name.toLowerCase().includes(query) ||
-                event.place.toLowerCase().includes(query) ||
-                event.price.toLowerCase().includes(query) ||
-                event.date.toLowerCase().includes(query) ||
-                getEventTypeName(event.type).toLowerCase().includes(query)
-                
-        );
+        const filtered = events.filter((event) => {
+            const eventName = (event.name || '').toLowerCase();
+            const eventPlace = (event.place || '').toLowerCase();
+            const eventPrice = (event.price || '').toLowerCase();
+            const eventDate = (event.date || '').toLowerCase();
+            const eventTypeName = (getEventTypeName(event.type) || '').toLowerCase();
+    
+            return (
+                eventName.includes(query) ||
+                eventPlace.includes(query) ||
+                eventPrice.includes(query) ||
+                eventDate.includes(query) ||
+                eventTypeName.includes(query)
+            );
+        });
     
         setFilteredOffers(filtered);
         setNoMatch(filtered.length === 0);
     };
+    
 
     const getEvents = async () => {
         try {
@@ -81,6 +90,15 @@ function EventsPage(){
         getEventTypes();
     }, []);
 
+    const handleSingleEventClick = (event) => {
+        setSingleEventOpen(!isSingleEventOpen);
+        setSelectedEvent(event);
+    };
+    const handleSingleEventClose = () => {
+        setSingleEventOpen(false);
+        setSelectedEvent(null);
+    };
+
     return(
         <>
         <div className="min-h-screen overflow-y-scroll flex flex-col items-center w-full bg-[rgb(18,18,18,0.95)]">
@@ -106,17 +124,17 @@ function EventsPage(){
             <div className='w-full h-full my-10 flex flex-wrap flex-grow justify-around text-white items-center sm:flex-row md:flex-row lg:flex-row xl:flex-row'>
             {noMatch && <p className='text-3xl uppercase font-light tracking-widest'>No events match your search</p>}
                 {filteredOffers.map((data) => (
-                    <div className={`w-[250px] m-2 cursor-pointer relative text-xl border-2 border-neutral-200 hover:scale-105 transition-all duration-300 h-[400px] flex text-center flex-col uppercase font-light tracking-widest bg-cover bg-center`} id={'event_'+data.id} style={{ backgroundImage: `url(http://localhost/storage/images/${data.image_path})` }}>
-                        <div className='w-full h-full flex flex-col relative'>
-                        <p className='z-10'>{data.name}</p>
-                        <p>{data.date}</p>
-                        <p>{data.price} €</p>
-                        <p>{getEventTypeName(data.type)}</p>
+                    <div key={data.id} onClick={() => handleSingleEventClick(data)} className={`w-[250px] m-2 cursor-pointer relative text-xl border-2 border-neutral-200 hover:scale-105 transition-all duration-300 h-[400px] flex text-center flex-col uppercase font-light tracking-widest bg-cover bg-center`} id={'event_'+data.id} style={{ backgroundImage: `url(http://localhost/storage/images/${data.image_path})` }}>
+                        <div className='w-full h-full flex flex-col items-center relative'>
+                            <p className='z-10'>{data.name}</p>
+                            <p>{data.date}</p>
+                            <p>{getEventTypeName(data.type)}</p>
                         </div>
                         <div className='w-full h-full absolute top-0 left-0 bg-[rgb(0,0,0,0.4)] hover:bg-[rgb(0,0,0,0)] transition-all duration-300'></div>
                     </div>
                 ))}
             </div>
+            {isSingleEventOpen && <SingleEvent onClose={handleSingleEventClose} selectedEvent={selectedEvent}/>}
         </div>
         </>
     );

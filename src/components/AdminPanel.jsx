@@ -17,19 +17,26 @@ function AdminPanel(){
         const query = e.target.value.toLowerCase();
         setSearch(query);
     
-        const filtered = events.filter(
-            (event) =>
-                event.name.toLowerCase().includes(query) ||
-                event.place.toLowerCase().includes(query) ||
-                event.price.toLowerCase().includes(query) ||
-                event.date.toLowerCase().includes(query) ||
-                getEventTypeName(event.type).toLowerCase().includes(query)
-                
-        );
+        const filtered = events.filter((event) => {
+            const eventName = (event.name || '').toLowerCase();
+            const eventPlace = (event.place || '').toLowerCase();
+            const eventPrice = (event.price || '').toLowerCase();
+            const eventDate = (event.date || '').toLowerCase();
+            const eventTypeName = (getEventTypeName(event.type) || '').toLowerCase();
+    
+            return (
+                eventName.includes(query) ||
+                eventPlace.includes(query) ||
+                eventPrice.includes(query) ||
+                eventDate.includes(query) ||
+                eventTypeName.includes(query)
+            );
+        });
     
         setFilteredOffers(filtered);
         setNoMatch(filtered.length === 0);
     };
+    
 
     const handleCreateClick = () => {
         setCreateOpen(!isCreateOpen);
@@ -172,7 +179,6 @@ function AdminPanel(){
                         <div className='w-full h-full flex flex-col items-center relative'>
                             <p className='z-10'>{data.name}</p>
                             <p>{data.date}</p>
-                            <p>{data.price} €</p>
                             <p>{getEventTypeName(data.type)}</p>
                             <div className='absolute w-full top-[85%] flex justify-around opacity-100 z-10'>
                                 <svg onClick={(e) => handleEditClick(e, data)} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12">

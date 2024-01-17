@@ -47,7 +47,6 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
             document.getElementById('name').value = selectedEvent.name;
             document.getElementById('description').value = selectedEvent.description;
             document.getElementById('date').value = selectedEvent.date;
-            document.getElementById('price').value = selectedEvent.price;
             document.getElementById('place').value = selectedEvent.place;
             if (selectedEvent.image_path) {
                 setSelectedFile(null);
@@ -63,6 +62,56 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
         setUpdateImage(!updateImage);
     };
 
+    const [existingTickets, setExistingTickets] = useState([]);
+    const [newTickets, setNewTickets] = useState([{ ticket_name: '', ticket_price: '', quantity: 1 }]);
+
+    useEffect(() => {
+        const getEventTickets = async ($id) => {
+            try {
+                const response = await fetch(`http://localhost/api/ticket-list-${$id}`, {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    console.error('Error:', response.status);
+                } else {
+                    const eventTickets = await response.json();
+                    setExistingTickets(eventTickets);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+        getEventTickets(selectedEvent.id);
+    }, [selectedEvent.id]);
+
+    const handleNewTicketChange = (e, index, property) => {
+        const newTicketList = [...newTickets];
+        newTicketList[index][property] = e.target.value;
+        setNewTickets(newTicketList);
+    };
+
+    const addNewTicket = () => {
+        setNewTickets([...newTickets, { ticket_name: '', ticket_price: '', quantity: 1 }]);
+    };
+
+    const removeNewTicket = (index) => {
+        if (newTickets.length > 0) {
+            const newTicketList = [...newTickets];
+            newTicketList.splice(index, 1);
+            setNewTickets(newTicketList);
+        }
+    };
+
+    const handleExistingTicketChange = (e, index, property) => {
+        const updatedExistingTickets = [...existingTickets];
+        updatedExistingTickets[index][property] = e.target.value;
+        setExistingTickets(updatedExistingTickets);
+    };
+
     const handleSubmitForm = async (e) => {
         e.preventDefault();
     
@@ -71,7 +120,6 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
         formData.append('description', e.target.description.value.trim());
         formData.append('type', e.target.type.value.trim());
         formData.append('date', e.target.date.value.trim());
-        formData.append('price', e.target.price.value.trim());
         formData.append('place', e.target.place.value.trim());
         if (updateImage && selectedFile) {
             formData.append('image', selectedFile);
@@ -85,7 +133,6 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
         const descToClear = formData.get('description');
         const typeToClear = formData.get('type');
         const dateToClear = formData.get('date');
-        const priceToClear = formData.get('price');
         const placeToClear = formData.get('place');
         const imageToClear = formData.get('image');
 
@@ -112,16 +159,67 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
             }
         }
 
-        if (!priceToClear) {
-            validationErrors.price = 'Event price is required';
-        } else if (priceToClear < 0){
-            validationErrors.price = 'Events are not free';
-        }
-
         if (!placeToClear) {
             validationErrors.place = 'Event place is required';
         }
 
+        existingTickets.forEach((ticket, index) => {
+            const ticketNameToClear = ticket.ticket_name;
+            const ticketPriceToClear = ticket.ticket_price;
+            const ticketQuantityToClear = ticket.quantity;
+
+            if (!ticketNameToClear) {
+                validationErrors[`existingTicketName${index}`] = 'Existing Ticket name is required';
+            }
+
+            if (!ticketPriceToClear) {
+                validationErrors[`existingTicketPrice${index}`] = 'Exsiting Ticket price is required';
+            } else if (ticketPriceToClear < 1) {
+                validationErrors[`existingTicketPrice${index}`] = 'Existing Ticket price must be greater than 0';
+            }
+
+            if (!ticketQuantityToClear) {
+                validationErrors[`existingTicketQuantity${index}`] = 'Existing Ticket quantity is required';
+            } else if (ticketQuantityToClear < 1) {
+                validationErrors[`existingTicketQuantiy${index}`] = 'Existing Ticket quantity must be greater than 0';
+            }
+        });
+
+        newTickets.forEach((ticket, index) => {
+            const ticketNameToClear = ticket.ticket_name;
+            const ticketPriceToClear = ticket.ticket_price;
+            const ticketQuantityToClear = ticket.quantity;
+
+            if (!ticketNameToClear) {
+                validationErrors[`newTicketName${index}`] = 'New Ticket name is required';
+            }
+
+            if (!ticketPriceToClear) {
+                validationErrors[`newTicketPrice${index}`] = 'New Ticket price is required';
+            } else if (ticketPriceToClear < 1) {
+                validationErrors[`newTicketPrice${index}`] = 'New Ticket price must be greater than 0';
+            }
+
+            if (!ticketQuantityToClear) {
+                validationErrors[`newTicketQuantity${index}`] = 'New Ticket quantity is required';
+            } else if (ticketQuantityToClear < 1) {
+                validationErrors[`newTicketQuantiy${index}`] = 'New Ticket quantity must be greater than 0';
+            }
+        });
+
+        const ticketFormData = new FormData();
+
+        const ticketsData = [
+            ...existingTickets.map((ticket) => ({ ...ticket, id: ticket.id })),
+            ...newTickets,
+        ];
+
+        ticketFormData.append('tickets', JSON.stringify(ticketsData));
+        if (ticketFormData.has('tickets')) {
+            console.log(`ticket => [ ${ticketFormData.get('tickets')} ]`);
+          } else {
+            console.log('The key "tickets" does not exist in the FormData object.');
+          }
         setErrors(validationErrors);
         setSuccess('');
         if (Object.keys(validationErrors).length === 0) {
@@ -143,7 +241,26 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
                         setErrors(responseData.details);
                     }
                 } else {
-                    // console.log(response);
+                    
+                    try {
+                        console.log("Data to be sent:", { tickets: ticketsData })
+                        const ticketResponse = await fetch(`http://localhost/api/ticket-update-${selectedEvent.id}`, {
+                            method: 'POST',
+                            headers: {
+                                'X-HTTP-Method-Override': 'PUT',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ tickets: ticketsData }),
+                        });
+                        if (!ticketResponse.ok) {
+                            console.error('Error:', ticketResponse.status);
+                            // Handle ticket creation error if needed
+                        } else {
+                            console.log('pog');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
                     setSuccess('Event updated successfully');
                     onEventUpdated();
                 }
@@ -151,8 +268,8 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
                 console.error('Error:', error);
             }
         }
-
     };
+
     return(
         <>
         <div className={`w-screen min-h-screen fixed top-0 left-0 bg-black bg-opacity-40 z-20 transition-opacity duration-300`}></div>
@@ -165,47 +282,174 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
                         <span className='text-3xl font-light'>X</span>
                     </div>
                 </div>
-                <div className='w-full h-[90%] flex flex-col justify-center'>
-                        <form className='w-full flex relative sm:flex-row md:flex-row lg:flex-row xl:flex-row flex-col overflow-y-scroll' onSubmit={handleSubmitForm}>
-                            <div className='w-full sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2 justify-center items-center'>
-                                <div className='w-full flex mt-8 sm:mt-6 md:mt-6 lg:mt-6 xl:mt-6 items-center flex-col sm:items-start'>
-                                    <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='loginEmail'>Event name</label>
-                                    <input className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' type='text' id='name' name='name'/>
-                                    {errors.name && <p className="text-red-500 ml-3 my-2 text-lg">{errors.name}</p>}
-                                </div>
-                                <div className='w-full my-2 flex items-center flex-col sm:items-start'>
-                                    <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='loginEmail'>Event description</label>
-                                    <textarea className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' id='description' name='description'></textarea>
-                                    {errors.desc && <p className="text-red-500 ml-3 my-2 text-lg">{errors.desc}</p>}
-                                </div>
-                                <div className='w-full my-2 flex items-center flex-col sm:items-start'>
-                                    <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='price'>Event type</label>
-                                    <select className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' id='type' name='type' value={selectedEvent.type}>
+                    <form className='w-full h-[90%] flex flex-col justify-center' onSubmit={handleSubmitForm}>
+                        <div className='w-full flex relative flex-col overflow-y-scroll'>
+                            <div className='w-full flex flex-col sm:flex-row'>
+                                <div className='w-full sm:w-1/2 flex flex-col'>
+                                <div className='w-full sm:w-[90%] justify-center items-center'>
+                                    <div className='w-full flex mt-8 sm:mt-6 md:mt-6 lg:mt-6 xl:mt-6 items-center flex-col sm:items-start'>
+                                        <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='loginEmail'>Event name</label>
+                                        <input className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' type='text' id='name' name='name'/>
+                                        {errors.name && <p className="text-red-500 ml-3 my-2 text-lg">{errors.name}</p>}
+                                    </div>
+                                    <div className='w-full my-2 flex items-center flex-col sm:items-start'>
+                                        <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='loginEmail'>Event description</label>
+                                        <textarea className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' id='description' name='description'></textarea>
+                                        {errors.desc && <p className="text-red-500 ml-3 my-2 text-lg">{errors.desc}</p>}
+                                    </div>
+                                    <div className='w-full my-2 flex items-center flex-col sm:items-start'>
+                                        <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='price'>Event type</label>
+                                        <select className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' id='type' name='type'>
                                         {eventTypes.map((type) => (
                                             <option key={type.id} value={type.id}>
-                                                {type.type}
+                                            {type.type}
                                             </option>
                                         ))}
-                                    </select>
-                                    {errors.type && <p className="text-red-500 ml-3 my-2 text-lg">{errors.type}</p>}
+                                        </select>
+                                        {errors.type && <p className="text-red-500 ml-3 my-2 text-lg">{errors.type}</p>}
+                                    </div>
+                                    <div className='w-full justify-center md:w-full my-2 flex items-center flex-col sm:items-start'>
+                                        <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='date'>Event date</label>
+                                        <input className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' type='datetime-local' id='date' name='date'/>
+                                        {errors.date && <p className="text-red-500 ml-3 my-2 text-lg">{errors.date}</p>}
+                                    </div>
+                                    <div className='w-full my-2 flex items-center flex-col sm:items-start'>
+                                        <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='place'>Event place</label>
+                                        <input className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' type='text' id='place' name='place'/>
+                                        {errors.place && <p className="text-red-500 ml-3 my-2 text-lg">{errors.place}</p>}
+                                    </div>
                                 </div>
-                                <div className='w-full justify-center md:w-full my-2 flex items-center flex-col sm:items-start'>
-                                    <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='date'>Event date</label>
-                                    <input className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' type='datetime-local' id='date' name='date'/>
-                                    {errors.date && <p className="text-red-500 ml-3 my-2 text-lg">{errors.date}</p>}
                                 </div>
-                                <div className='w-full my-2 flex items-center flex-col sm:items-start'>
-                                    <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='place'>Event place</label>
-                                    <input className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' type='text' id='place' name='place'/>
-                                    {errors.place && <p className="text-red-500 ml-3 my-2 text-lg">{errors.place}</p>}
-                                </div>
-                                <div className='w-full my-2 flex items-center flex-col sm:items-start'>
-                                    <label className='ml-4 text-lg uppercase tracking-widest' htmlFor='price'>Event price</label>
-                                    <input className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' type='number' step='0.01' min='1' max='9999' id='price' name='price'/>
-                                    {errors.price && <p className="text-red-500 ml-3 my-2 text-lg">{errors.price}</p>}
+                                <div className='w-full sm:w-1/2 flex flex-col'>
+                                    <div className='w-full'>
+                                        {existingTickets.map((ticket, index) => (
+                                            <div key={`existing-ticket-${index}`} className='w-full my-8 sm:my-6 flex items-center flex-col sm:items-start'>
+                                                <label htmlFor={`existingTicketName${index}`} className='ml-4 text-lg uppercase tracking-widest'>
+                                                    Ticket Name
+                                                </label>
+                                                <input
+                                                    type='text'
+                                                    id={`existingTicketName${index}`}
+                                                    name={`existingTicketName${index}`}
+                                                    value={ticket.ticket_name}
+                                                    onChange={(e) => handleExistingTicketChange(e, index, 'ticket_name')}
+                                                    className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
+                                                />
+                                                {errors[`existingTicketName${index}`] && (
+                                                    <p className="text-red-500 ml-3 my-2 text-lg">
+                                                        {errors[`existingTicketName${index}`]}
+                                                    </p>
+                                                )}
+                                                <label htmlFor={`existingTicketPrice${index}`} className='ml-4 text-lg uppercase tracking-widest'>
+                                                    Ticket Price
+                                                </label>
+                                                <input
+                                                    type='number'
+                                                    min='1'
+                                                    max='9999'
+                                                    step='0.01'
+                                                    id={`existingTicketPrice${index}`}
+                                                    name={`existingTicketPrice${index}`}
+                                                    value={ticket.ticket_price}
+                                                    onChange={(e) => handleExistingTicketChange(e, index, 'ticket_price')}
+                                                    className='ml-4 my-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
+                                                />
+                                                {errors[`existingTicketPrice${index}`] && (
+                                                    <p className="text-red-500 ml-3 my-2 text-lg">
+                                                        {errors[`existingTicketPrice${index}`]}
+                                                    </p>
+                                                )}
+                                                <label htmlFor={`existingTicketQuantity${index}`} className='ml-4 text-lg uppercase tracking-widest'>
+                                                    Ticket Quantity
+                                                </label>
+                                                <input
+                                                    type='number'
+                                                    min='1'
+                                                    max='9999'
+                                                    step='1'
+                                                    id={`existingTicketQuantity${index}`}
+                                                    name={`existingTicketQuantity${index}`}
+                                                    value={ticket.quantity}
+                                                    onChange={(e) => handleExistingTicketChange(e, index, 'quantity')}
+                                                    className='ml-4 my-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
+                                                />
+                                                {errors[`existingTicketQuantity${index}`] && (
+                                                    <p className="text-red-500 ml-3 my-2 text-lg">
+                                                        {errors[`existingTicketQuantity${index}`]}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
+                                        {newTickets.map((ticket, index) => (
+                                            <div key={`new-ticket-${index}`} className='w-full my-8 sm:my-6 flex items-center flex-col sm:items-start'>
+                                                <label htmlFor={`newTicketName${index}`} className='ml-4 text-lg uppercase tracking-widest'>
+                                                    Ticket Name
+                                                </label>
+                                                <input
+                                                    type='text'
+                                                    id={`newTicketName${index}`}
+                                                    name={`newTicketName${index}`}
+                                                    value={ticket.ticket_name}
+                                                    onChange={(e) => handleNewTicketChange(e, index, 'ticket_name')}
+                                                    className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
+                                                />
+                                                {errors[`newTicketName${index}`] && (
+                                                    <p className="text-red-500 ml-3 my-2 text-lg">
+                                                        {errors[`newTicketName${index}`]}
+                                                    </p>
+                                                )}
+                                                <label htmlFor={`newTicketPrice${index}`} className='ml-4 text-lg uppercase tracking-widest'>
+                                                    Ticket Price
+                                                </label>
+                                                <input
+                                                    type='number'
+                                                    min='1'
+                                                    max='9999'
+                                                    step='0.01'
+                                                    id={`newTicketPrice${index}`}
+                                                    name={`newTicketPrice${index}`}
+                                                    value={ticket.ticket_price}
+                                                    onChange={(e) => handleNewTicketChange(e, index, 'ticket_price')}
+                                                    className='ml-4 my-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
+                                                />
+                                                {errors[`newTicketPrice${index}`] && (
+                                                    <p className="text-red-500 ml-3 my-2 text-lg">
+                                                        {errors[`newTicketPrice${index}`]}
+                                                    </p>
+                                                )}
+                                                <label hhtmlFor={`newTicketQuantity${index}`} className='ml-4 text-lg uppercase tracking-widest'>
+                                                    Ticket Quantity
+                                                </label>
+                                                <input
+                                                    type='number'
+                                                    min='1'
+                                                    max='9999'
+                                                    step='1'
+                                                    id={`newTicketQuantity${index}`}
+                                                    name={`newTicketQuantity${index}`}
+                                                    value={ticket.quantity}
+                                                    onChange={(e) => handleNewTicketChange(e, index, 'quantity')}
+                                                    className='ml-4 my-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
+                                                />
+                                                {errors[`newTicketQuantity${index}`] && (
+                                                    <p className="text-red-500 ml-3 my-2 text-lg">
+                                                        {errors[`newTicketQuantity${index}`]}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <div className='flex justify-between items-center'>
+                                            <button type='button' onClick={addNewTicket} className='text-lg text-white bg-green-500 p-2 m-2 rounded-sm hover:bg-green-600'>
+                                                Add Ticket
+                                            </button>
+                                            <button type='button' onClick={removeNewTicket} className='text-lg text-white bg-red-500 p-2 m-2 rounded-sm hover:bg-red-600'>
+                                                Remove Ticket
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className='w-full sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2'>
+                            <div className='w-full'>
                                 <div className='w-full mt-12 sm:mt-10 md:mt-10 lg:mt-10 xl:mt-10 justify-center items-center flex flex-col'>
                                     <img
                                         className='hover:scale-105 transition-all duration-300 w-[300px] h-[315px] sm:w-[90%] md:w-[90%] lg:w-[90%] xl:w-[90%] border-2 border-white-500'
@@ -219,7 +463,7 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
                                     </h1>
                                     {selectedEvent.image_path && (
                                         <button
-                                            className='cursor-pointer ml-3 my-0 w-4/5 focus:outline-none bg-transparent w-[80%] hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 text-center uppercase tracking-widest my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 w-full h-10 rounded-sm'
+                                            className='cursor-pointer ml-3 my-0 focus:outline-none bg-transparent w-[80%] hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 text-center uppercase tracking-widest my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
                                             onClick={handleUpdateImage}
                                         >
                                             {updateImage ? 'Keep Image' : 'Update Image'}
@@ -228,7 +472,7 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
                                     {updateImage && (
                                         <>
                                             <label
-                                                className='cursor-pointer ml-3 my-0 w-4/5 focus:outline-none bg-transparent w-[80%] hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 text-center uppercase tracking-widest my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 w-full h-10 rounded-sm'
+                                                className='cursor-pointer ml-3 my-0 focus:outline-none bg-transparent w-[80%] hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 text-center uppercase tracking-widest my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm'
                                                 htmlFor='image'
                                             >
                                                 Choose a file
@@ -250,8 +494,8 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
                                     </div>
                                 </div>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                     </div>
             </div>
             </div>

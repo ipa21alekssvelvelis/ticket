@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FaStar } from 'react-icons/fa';
+import PaymentForm from './PaymentForm';
 
 function SingleEvent({onClose, selectedEvent}){
     const [errors, setErrors] = useState({});
     const [success, setSuccess] = useState('');
 
     const token = localStorage.getItem('token');
-    // console.log(token);
 
     const handleClose = () => {
         onClose();
@@ -60,7 +59,30 @@ function SingleEvent({onClose, selectedEvent}){
         };
         getEventReviews(selectedEvent.id);
     }, []);
-    console.log(reviewList);
+
+    const [ticketList, setTicketList] = useState([]);
+    useEffect(() => {
+        const getEventTickets = async ($id) => {
+            try {
+                const response = await fetch(`http://localhost/api/ticket-list-${$id}`, {
+                    method: 'GET',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    console.error('Error:', response.status);
+                } else {
+                    const eventTickets = await response.json();
+                    setTicketList(eventTickets);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        };
+        getEventTickets(selectedEvent.id);
+    }, []);
 
     const getEventTypeName = (typeId) => {
         const eventType = eventTypes.find((event) => event.id === typeId);
@@ -135,9 +157,9 @@ function SingleEvent({onClose, selectedEvent}){
         formData.append('user_review', e.target.review.value.trim());
         formData.append('user_rating', rating);
 
-        console.log(formData.get('user_review'));
-        console.log(formData.get('user_rating'));
-        console.log(formData.get('event_id'));
+        // console.log(formData.get('user_review'));
+        // console.log(formData.get('user_rating'));
+        // console.log(formData.get('event_id'));
         const reviewToClear = formData.get('user_review');
 
         const validationErrors = {};
@@ -158,7 +180,7 @@ function SingleEvent({onClose, selectedEvent}){
                 if (!response.ok) {
                     const responseData = await response.json();
                     setErrors(responseData.error);
-                    console.log(responseData.error);
+                    // console.log(responseData.error);
                 } else {
                     setCurrentRating(1);
                     e.target.reset();
@@ -180,6 +202,15 @@ function SingleEvent({onClose, selectedEvent}){
             }
         }
     }
+
+    const [isPaymentOpen, setPaymentOpen] = useState(false);
+
+    const handlePaymentClick = () => {
+        setPaymentOpen(!isPaymentOpen);
+    };
+    const handlePaymentClose = () => {
+        setPaymentOpen(false);
+    };
 
     return(
         <>
@@ -206,39 +237,33 @@ function SingleEvent({onClose, selectedEvent}){
                                                 name='editimage'
                                             />
                                             <div className='w-4/5 flex justify-center items-center flex flex-col text-center'>
-                                                <p>some  text will go here</p>
+                                                <button className='cursor-pointer ml-4 w-[40%] my-4 focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm uppercase font-light text-3xl tracking-widest' onClick={handlePaymentClick}>Buy</button>
                                             </div>
                                         </div>
                                     </div>
                                     <div className='w-full sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2 justify-center items-center'>
                                     <div className='w-full justify-center md:w-full my-2 flex items-center flex-col sm:items-start'>
                                             <h1 className='ml-4 text-xl uppercase tracking-widest' >Event description</h1>
-                                            <div className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
+                                            <div className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
                                                 <p className='ml-2 text-lg tracking-wdiest'>{selectedEvent.description}</p>
                                             </div>
                                         </div>
                                         <div className='w-full my-2 flex items-center flex-col sm:items-start'>
                                             <h1 className='ml-4 text-lg uppercase tracking-widest'>Event type</h1>
-                                            <div className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
+                                            <div className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
                                                 <p className='ml-2 text-lg tracking-wdiest'>{getEventTypeName(selectedEvent.type)}</p>
                                             </div>
                                         </div>
                                         <div className='w-full justify-center md:w-full my-2 flex items-center flex-col sm:items-start'>
                                             <h1 className='ml-4 text-lg uppercase tracking-widest'>Event date</h1>
-                                            <div className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
+                                            <div className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
                                                 <p className='ml-2 text-lg tracking-wdiest'>{selectedEvent.date}</p>
                                             </div>
                                         </div>
                                         <div className='w-full my-2 flex items-center flex-col sm:items-start'>
                                             <h1 className='ml-4 text-lg uppercase tracking-widest'>Event place</h1>
-                                            <div className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
+                                            <div className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
                                                 <p className='ml-2 text-lg tracking-wdiest'>{selectedEvent.place}</p>
-                                            </div>
-                                        </div>
-                                        <div className='w-full my-2 flex items-center flex-col sm:items-start'>
-                                            <h1 className='ml-4 text-lg uppercase tracking-widest'>Event price</h1>
-                                            <div className='ml-4 w-4/5 sm:w-[95%] md:w-[95%] lg:w-[95%] xl:w-[95%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg p-1 rounded-sm'>
-                                                <p className='ml-2 text-lg tracking-wdiest'>{selectedEvent.price} €</p>
                                             </div>
                                         </div>
                                 </div>
@@ -271,7 +296,7 @@ function SingleEvent({onClose, selectedEvent}){
                                     <div className='w-full my-4 mt-6 flex items-center flex-col sm:items-start'>
                                         <div className='w-full items-center flex flex-col sm:flex-row md:flex-row lg:flex-row xl:flex-row'>
                                             <div className='w-[70%]'>
-                                                <h1 className='sm:ml-14 text-lg uppercase tracking-widest flex'>{data.user.email}</h1>   
+                                                <h1 className='sm:ml-16 text-lg uppercase tracking-widest flex'>{data.user.email}</h1>   
                                             </div>
                                             <div className='w-[30%]'>
                                             <div className='flex'>{generateReviewStars(data.rating)}</div> 
@@ -287,6 +312,7 @@ function SingleEvent({onClose, selectedEvent}){
                             </div>
                         </div>
                     </div>
+                    {isPaymentOpen && <PaymentForm onClose={handlePaymentClose} ticketList={ticketList}/>}
                 </div>
             </div>
         </>
