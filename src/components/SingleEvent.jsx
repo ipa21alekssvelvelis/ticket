@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PaymentForm from './PaymentForm';
 
 function SingleEvent({onClose, selectedEvent}){
+
     const [errors, setErrors] = useState({});
     const [success, setSuccess] = useState('');
 
@@ -236,9 +237,11 @@ function SingleEvent({onClose, selectedEvent}){
                                                 id='editimage'
                                                 name='editimage'
                                             />
-                                            <div className='w-4/5 flex justify-center items-center flex flex-col text-center'>
+                                            {token && 
+                                                <div className='w-4/5 flex justify-center items-center flex flex-col text-center'>
                                                 <button className='cursor-pointer ml-4 w-[40%] my-4 focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm uppercase font-light text-3xl tracking-widest' onClick={handlePaymentClick}>Buy</button>
-                                            </div>
+                                                </div>
+                                            }
                                         </div>
                                     </div>
                                     <div className='w-full sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2 justify-center items-center'>
@@ -268,32 +271,34 @@ function SingleEvent({onClose, selectedEvent}){
                                         </div>
                                 </div>
                             </div>
-                            <form className='w-full flex flex-col uppercase font-light tracking-widest' onSubmit={handleSubmitForm}>
-                                <div className='w-full my-4 mt-6 flex items-center flex-col sm:items-start'>
-                                    <div className='w-full items-center flex flex-col sm:flex-row md:flex-row lg:flex-row xl:flex-row'>
-                                        <div className='w-[70%] flex sm:justify-start justify-center'>
-                                            <h1 className='sm:ml-14 text-lg uppercase tracking-widest'>Your review:</h1>   
+                            {token &&
+                                <form className='w-full flex flex-col uppercase font-light tracking-widest' onSubmit={handleSubmitForm}>
+                                    <div className='w-full my-4 mt-6 flex items-center flex-col sm:items-start'>
+                                        <div className='w-full items-center flex flex-col sm:flex-row md:flex-row lg:flex-row xl:flex-row'>
+                                            <div className='w-[70%] flex sm:justify-start justify-center'>
+                                                <h1 className='sm:ml-14 text-lg uppercase tracking-widest'>Your review:</h1>   
+                                            </div>
+                                            <div className='w-[30%] flex sm:justify-start justify-center'>
+                                            <div className='flex'>{genStar()}</div>
+                                            </div>
                                         </div>
-                                        <div className='w-[30%] flex sm:justify-start justify-center'>
-                                           <div className='flex'>{genStar()}</div>
+                                        <div className='w-full flex items-center justify-center'>
+                                            <textarea className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' id='review' name='review'/>
+                                        </div> 
+                                        <div className='w-full flex flex-col items-center justify-around'>
+                                            {errors && errors.review && <p className="text-red-500 ml-3 my-2 text-lg">{errors.review}</p>} 
+                                        <input className='ml-4 mt-1 w-[35%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm uppercase font-light text-3xl tracking-widest' type='submit' value='Post'/>
+                                        {success && <p className="text-green-500 ml-3 my-2 text-lg">{success}</p>} 
                                         </div>
                                     </div>
-                                    <div className='w-full flex items-center justify-center'>
-                                        <textarea className='ml-4 w-4/5 sm:w-[90%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm' id='review' name='review'/>
-                                    </div> 
-                                    <div className='w-full flex flex-col items-center justify-around'>
-                                        {errors && errors.review && <p className="text-red-500 ml-3 my-2 text-lg">{errors.review}</p>} 
-                                       <input className='ml-4 mt-1 w-[35%] focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 h-10 rounded-sm uppercase font-light text-3xl tracking-widest' type='submit' value='Post'/>
-                                       {success && <p className="text-green-500 ml-3 my-2 text-lg">{success}</p>} 
-                                    </div>
-                                </div>
-                            </form>
+                                </form>
+                            }
                             <div className='w-full flex justify-center uppercase font-light'>
                                 <h1 className='text-4xl sm:text-start text-center'>Reviews from event-goers:</h1>
                             </div>
                             <div className='w-full flex flex-col uppercase font-light tracking-widest'>
                                 {reviewList.map((data) => (
-                                    <div className='w-full my-4 mt-6 flex items-center flex-col sm:items-start'>
+                                    <div key={data.id} className='w-full my-4 mt-6 flex items-center flex-col sm:items-start'>
                                         <div className='w-full items-center flex flex-col sm:flex-row md:flex-row lg:flex-row xl:flex-row'>
                                             <div className='w-[70%]'>
                                                 <h1 className='sm:ml-16 text-lg uppercase tracking-widest flex'>{data.user.email}</h1>   

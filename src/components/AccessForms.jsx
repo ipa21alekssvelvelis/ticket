@@ -160,7 +160,7 @@ function AccessForms() {
                             <input className='mt-4 w-[75%] my-2 h-10 bg-[#23279C] text-white text-2xl rounded-sm duration-500 hover:scale-105 cursor-pointer' type='submit' value='Login' />
                             {success && <p className='text-green-500 ml-3 my-2 text-lg'>{success}</p>}
                         </form>
-                        <h1 className='justify-center flex text-xl cursor-pointer font-light uppercase'>Forgot your password?</h1>
+                        {/* <h1 className='justify-center flex text-xl cursor-pointer font-light uppercase'>Forgot your password?</h1> */}
                     </div>
                     <p className='absolute top-2 right-0 mr-1 text-2xl hover:bg-white hover:text-black duration-500 transition-bg cursor-pointer p-1 rounded-sm uppercase tracking-wide' onClick={toggleForm}>{isLoginForm ? 'Register' : 'Login'}</p>
                 </div>
@@ -190,7 +190,7 @@ function AccessForms() {
                             <input className='mt-4 w-[75%] h-10 bg-[#3A3FC1] text-white text-2xl rounded-sm duration-500 hover:scale-105 cursor-pointer' type='submit' value='Register' />
                             {success && <p className='text-green-500 ml-3 my-2 text-lg'>{success}</p>}
                         </form>
-                        <h1 className='justify-center flex text-xl cursor-pointer uppercase'>Or continue with</h1>
+                        {/* <h1 className='justify-center flex text-xl cursor-pointer uppercase'>Or continue with</h1> */}
                     </div>
                     <p className='absolute top-2 right-2 mr-4 text-2xl hover:bg-white hover:text-black duration-500 transition-bg cursor-pointer p-1 rounded-sm uppercase tracking-wide' onClick={toggleForm}>{isLoginForm ? 'Register' : 'Login'}</p>
                 </div>

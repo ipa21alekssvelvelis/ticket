@@ -490,7 +490,7 @@ function EditOffer({onClose, selectedEvent, onEventUpdated}){
                                     )}
                                     <div className='w-4/5 flex justify-center items-center flex flex-col text-center'>
                                     <input className='ml-4 w-4/5 mt-1 focus:outline-none bg-transparent hover:scale-105 focus:scale-105 hover:border-neutral-200 focus:border-neutral-200 my-2 focus:border-2 duration-150 border border-neutral-600 text-lg indent-2 p-1 w-full h-10 rounded-sm uppercase font-light text-3xl tracking-widest' type='submit' value='Edit'/>
-                                        {success && <p className="text-green-500 ml-3 text-lg">{success}</p>}
+                                        {success && <p className="text-green-500 ml-3 mb-4 text-lg">{success}</p>}
                                     </div>
                                 </div>
                             </div>
